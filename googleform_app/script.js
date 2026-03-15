@@ -23,6 +23,9 @@ document.addEventListener('DOMContentLoaded', () => {
     // LIFFの初期化 (LINE名自動取得)
     initializeLiff();
 
+    // 保険証CBのトグルロジックを設定
+    setupMynumberToggle();
+
     const form = document.getElementById('customForm');
     const submitBtn = document.getElementById('submitBtn');
     const btnText = submitBtn.querySelector('.btn-text');
@@ -61,6 +64,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         // フォームデータから必要なデータを抽出
         const formData = new FormData(form);
+        const isMynumber = document.getElementById('mynumber-checkbox').checked;
 
         // 生年月日データの結合
         const birthYear = document.getElementById('birth-year').value;
@@ -125,13 +129,18 @@ document.addEventListener('DOMContentLoaded', () => {
             weight = '-';
         }
 
+        // 保険証情報と相違なし時は、性別・住所・生年月日を「保険証情報と相違なし」とする
+        const sexValue = isMynumber ? '保険証情報と相違なし' : (formData.get('entry.1417926586') || '');
+        const addressValue = isMynumber ? '保険証情報と相違なし' : (formData.get('entry.375838857') || '');
+        const birthdateValue = isMynumber ? '保険証情報と相違なし' : birthdate;
+
         // 送信用のJSONデータを作成
         const data = {
             name: formData.get('entry.2108592001') || '',
             kana: formData.get('entry.1016463931') || '',
-            sex: formData.get('entry.1417926586') || '',
+            sex: sexValue,
             tel: formData.get('entry.622897563') || '',
-            address: formData.get('entry.375838857') || '',
+            address: addressValue,
             lineName: formData.get('entry.1331782479') || '',
             isFirst: isFirst,
             symptoms: symptoms,
@@ -149,7 +158,7 @@ document.addEventListener('DOMContentLoaded', () => {
             food: food,
             pregnancy: pregnancy,
             weight: weight,
-            birthdate: birthdate
+            birthdate: birthdateValue
         };
 
         // fetch による非同期送信 (JSON を text/plain で送ることでCORS preflight回避)
@@ -248,6 +257,53 @@ function populateBirthDate() {
     }
 }
 
+
+/**
+ * 保険証情報相違なしチェックボックスのトグル処理
+ * チェック時: 性別・生年月日・住所を非表示にし、required を解除
+ * チェック解除時: 再表示し、required を復元
+ */
+function setupMynumberToggle() {
+    const checkbox = document.getElementById('mynumber-checkbox');
+    if (!checkbox) return;
+
+    checkbox.addEventListener('change', function () {
+        const targets = document.querySelectorAll('.mynumber-skip-target');
+        const isChecked = this.checked;
+
+        targets.forEach(group => {
+            if (isChecked) {
+                // 非表示にする
+                group.style.display = 'none';
+                // required 属性を退避して解除
+                group.querySelectorAll('[required]').forEach(el => {
+                    el.removeAttribute('required');
+                    el.setAttribute('data-mynumber-required', 'true');
+                });
+                // ラジオボタンの選択をクリア
+                group.querySelectorAll('input[type="radio"]').forEach(el => {
+                    el.checked = false;
+                });
+                // セレクトボックスをリセット
+                group.querySelectorAll('select').forEach(el => {
+                    el.selectedIndex = 0;
+                });
+                // テキスト入力をクリア
+                group.querySelectorAll('input[type="text"], input[type="tel"]').forEach(el => {
+                    el.value = '';
+                });
+            } else {
+                // 再表示する
+                group.style.display = '';
+                // required 属性を復元
+                group.querySelectorAll('[data-mynumber-required="true"]').forEach(el => {
+                    el.setAttribute('required', 'required');
+                    el.removeAttribute('data-mynumber-required');
+                });
+            }
+        });
+    });
+}
 
 
 /**
