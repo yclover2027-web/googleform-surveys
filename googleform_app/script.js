@@ -23,6 +23,9 @@ document.addEventListener('DOMContentLoaded', () => {
     // LIFFの初期化 (LINE名自動取得)
     initializeLiff();
 
+    // マイナンバーCBのトグルロジックを設定
+    setupMynumberToggle();
+
     const form = document.getElementById('customForm');
     const submitBtn = document.getElementById('submitBtn');
     const btnText = submitBtn.querySelector('.btn-text');
@@ -61,6 +64,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         // フォームデータから必要なデータを抽出
         const formData = new FormData(form);
+        const isMynumber = document.getElementById('mynumber-checkbox').checked;
 
         // 生年月日データの結合
         const birthYear = document.getElementById('birth-year').value;
@@ -125,13 +129,18 @@ document.addEventListener('DOMContentLoaded', () => {
             weight = '-';
         }
 
+        // 保険証情報参照時は、性別・住所・生年月日を「保険証情報参照」とする
+        const sexValue = isMynumber ? '保険証情報参照' : (formData.get('entry.1417926586') || '');
+        const addressValue = isMynumber ? '保険証情報参照' : (formData.get('entry.375838857') || '');
+        const birthdateValue = isMynumber ? '保険証情報参照' : birthdate;
+
         // 送信用のJSONデータを作成
         const data = {
             name: formData.get('entry.2108592001') || '',
             kana: formData.get('entry.1016463931') || '',
-            sex: formData.get('entry.1417926586') || '',
+            sex: sexValue,
             tel: formData.get('entry.622897563') || '',
-            address: formData.get('entry.375838857') || '',
+            address: addressValue,
             lineName: formData.get('entry.1331782479') || '',
             isFirst: isFirst,
             symptoms: symptoms,
@@ -149,7 +158,7 @@ document.addEventListener('DOMContentLoaded', () => {
             food: food,
             pregnancy: pregnancy,
             weight: weight,
-            birthdate: birthdate
+            birthdate: birthdateValue
         };
 
         // fetch による非同期送信 (JSON を text/plain で送ることでCORS preflight回避)
@@ -248,22 +257,81 @@ function populateBirthDate() {
     }
 }
 
+/**
+ * マイナンバー情報利用チェックボックスのトグル処理
+ * チェック時: 性別・生年月日・住所を非表示にし、required を解除
+ * チェック解除時: 再表示し、required を復元
+ */
+function setupMynumberToggle() {
+    const checkbox = document.getElementById('mynumber-checkbox');
+    if (!checkbox) return;
+
+    checkbox.addEventListener('change', function () {
+        const targets = document.querySelectorAll('.mynumber-skip-target');
+        const isChecked = this.checked;
+
+        targets.forEach(group => {
+            if (isChecked) {
+                // 非表示にする
+                group.style.display = 'none';
+                // required 属性を退避して解除
+                group.querySelectorAll('[required]').forEach(el => {
+                    el.removeAttribute('required');
+                    el.setAttribute('data-mynumber-required', 'true');
+                });
+                // ラジオボタンの選択をクリア
+                group.querySelectorAll('input[type="radio"]').forEach(el => {
+                    el.checked = false;
+                });
+                // セレクトボックスをリセット
+                group.querySelectorAll('select').forEach(el => {
+                    el.selectedIndex = 0;
+                });
+                // テキスト入力をクリア
+                group.querySelectorAll('input[type="text"], input[type="tel"]').forEach(el => {
+                    el.value = '';
+                });
+            } else {
+                // 再表示する
+                group.style.display = '';
+                // required 属性を復元
+                group.querySelectorAll('[data-mynumber-required="true"]').forEach(el => {
+                    el.setAttribute('required', 'required');
+                    el.removeAttribute('data-mynumber-required');
+                });
+            }
+        });
+    });
+}
 
 
 /**
  * LIFFの初期化とプロフィール情報の取得
- * ※友だち登録の有無にかかわらず、常にフォームを表示します
+ * 友だち登録済みの場合はそのままフォームを表示
+ * 未登録の場合は友だち追加リンクを表示
  */
 function initializeLiff() {
     const liffId = CONFIG.LIFF_ID;
 
-    // フォームを必ず表示するヘルパー関数
+    // フォームを表示するヘルパー関数
     function showForm() {
         const loadingMsg = document.getElementById('loadingMessage');
         if (loadingMsg) loadingMsg.style.display = 'none';
         const formHeader = document.querySelector('.form-header');
         if (formHeader) formHeader.style.display = '';
         document.getElementById('customForm').style.display = 'block';
+    }
+
+    // 友だち追加を促す画面を表示するヘルパー関数
+    function showFriendPrompt() {
+        const loadingMsg = document.getElementById('loadingMessage');
+        if (loadingMsg) {
+            loadingMsg.innerHTML = '<div style="text-align:center; padding: 30px 20px;">' +
+                '<p style="font-size: 1.1rem; margin-bottom: 15px;">アンケートにご回答いただくには<br>LINE友だち追加が必要です。</p>' +
+                '<a href="' + CONFIG.LINE_ADD_FRIEND_URL + '" style="display: inline-block; background: #06C755; color: #fff; padding: 14px 32px; border-radius: 8px; text-decoration: none; font-weight: bold; font-size: 1.1rem;">LINEで友だち追加する</a>' +
+                '<p style="margin-top: 20px; font-size: 0.85rem; color: #718096;">友だち追加後、このページを再読み込みしてください。</p>' +
+                '</div>';
+        }
     }
 
     if (typeof liff === 'undefined') {
@@ -274,25 +342,48 @@ function initializeLiff() {
 
     liff.init({ liffId: liffId })
         .then(() => {
-            // ログイン済みならプロフィール名を取得（友だち登録チェックはしない）
-            if (liff.isLoggedIn()) {
-                liff.getProfile()
-                    .then(profile => {
-                        const lineNameInput = document.getElementById('entry.1331782479');
-                        if (lineNameInput && !lineNameInput.value) {
-                            lineNameInput.value = profile.displayName;
-                        }
-                    })
-                    .catch(err => {
-                        console.error('LIFF getProfile error:', err);
-                    })
-                    .finally(() => {
-                        showForm();
-                    });
-            } else {
-                // 未ログインでもフォームは表示する（強制ログインしない）
-                showForm();
+            if (!liff.isLoggedIn()) {
+                // 自動遷移（認可画面やログイン）を行う
+                liff.login();
+                return; // login()が走るとリダイレクトされるため以降の処理は不要
             }
+
+            // プロフィール名を取得
+            const profilePromise = liff.getProfile()
+                .then(profile => {
+                    const lineNameInput = document.getElementById('entry.1331782479');
+                    if (lineNameInput && !lineNameInput.value) {
+                        lineNameInput.value = profile.displayName;
+                    }
+                })
+                .catch(err => {
+                    console.error('LIFF getProfile error:', err);
+                });
+
+            // 友だち登録状態を確認
+            const friendshipPromise = liff.getFriendship()
+                .then(data => {
+                    return data.friendFlag;
+                })
+                .catch(err => {
+                    console.error('LIFF getFriendship error:', err);
+                    return true; // エラー時はフォーム表示
+                });
+
+            Promise.all([profilePromise, friendshipPromise])
+                .then(([_, isFriend]) => {
+                    // URLやハッシュからスキップフラグがあるか確認（LIFF経由でのクエリ欠損・エンコード対策）
+                    const currentUrl = window.location.href;
+                    const skipPrompt = currentUrl.includes('skip=true') || currentUrl.includes('%3Fskip%3Dtrue') || currentUrl.includes('#skip');
+
+                    if (isFriend || skipPrompt) {
+                        // 友だち登録済み または スキップパラメータあり → そのままフォーム表示
+                        showForm();
+                    } else {
+                        // 友だち未登録 → 友だち追加を促す
+                        showFriendPrompt();
+                    }
+                });
         })
         .catch(err => {
             console.error('LIFF init error:', err);
