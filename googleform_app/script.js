@@ -23,7 +23,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // LIFFの初期化 (LINE名自動取得)
     initializeLiff();
 
-    // マイナンバーCBのトグルロジックを設定
+    // 保険証CBのトグルロジックを設定
     setupMynumberToggle();
 
     const form = document.getElementById('customForm');
@@ -129,10 +129,10 @@ document.addEventListener('DOMContentLoaded', () => {
             weight = '-';
         }
 
-        // 保険証情報参照時は、性別・住所・生年月日を「保険証情報参照」とする
-        const sexValue = isMynumber ? '保険証情報参照' : (formData.get('entry.1417926586') || '');
-        const addressValue = isMynumber ? '保険証情報参照' : (formData.get('entry.375838857') || '');
-        const birthdateValue = isMynumber ? '保険証情報参照' : birthdate;
+        // 保険証情報と相違なし時は、性別・住所・生年月日を「保険証情報と相違なし」とする
+        const sexValue = isMynumber ? '保険証情報と相違なし' : (formData.get('entry.1417926586') || '');
+        const addressValue = isMynumber ? '保険証情報と相違なし' : (formData.get('entry.375838857') || '');
+        const birthdateValue = isMynumber ? '保険証情報と相違なし' : birthdate;
 
         // 送信用のJSONデータを作成
         const data = {
@@ -258,7 +258,7 @@ function populateBirthDate() {
 }
 
 /**
- * マイナンバー情報利用チェックボックスのトグル処理
+ * 保険証情報相違なしチェックボックスのトグル処理
  * チェック時: 性別・生年月日・住所を非表示にし、required を解除
  * チェック解除時: 再表示し、required を復元
  */
