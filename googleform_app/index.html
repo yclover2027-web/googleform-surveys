@@ -74,7 +74,8 @@
                     <label for="entry.1016463931">フリガナ <span class="required">必須</span></label>
                     <input type="text" id="entry.1016463931" name="entry.1016463931" placeholder="例: クローバー タロウ"
                         required>
-                    <small class="help-text" style="color:#718096; font-size:0.8rem;">お名前を入力すると自動で補完されます。修正も可能です。</small>
+                    <small class="help-text"
+                        style="color:#718096; font-size:0.8rem;">お名前を入力すると自動で補完されます。修正も可能です。</small>
                 </div>
 
                 <div class="form-group">
@@ -83,9 +84,12 @@
                         required>
                 </div>
 
-                <div class="form-group" style="background: #f0faf3; padding: 15px; border-radius: 8px; border: 1px solid #6cb281;">
-                    <label class="checkbox-label" style="display: flex; align-items: center; gap: 8px; cursor: pointer; font-weight: 500;">
-                        <input type="checkbox" id="mynumber-checkbox" style="width: 20px; height: 20px; accent-color: #6cb281;">
+                <div class="form-group"
+                    style="background: #f0faf3; padding: 15px; border-radius: 8px; border: 1px solid #6cb281;">
+                    <label class="checkbox-label"
+                        style="display: flex; align-items: center; gap: 8px; cursor: pointer; font-weight: 500;">
+                        <input type="checkbox" id="mynumber-checkbox"
+                            style="width: 20px; height: 20px; accent-color: #6cb281;">
                         <span>保険証（保険者）の登録情報と相違なし（性別・住所・生年月日の入力を省略）</span>
                     </label>
                 </div>
@@ -145,18 +149,8 @@
                 </div>
 
 
-
-                <div class="form-group">
-                    <label>当薬局をご利用するのは初めてですか？ <span class="required">必須</span></label>
-                    <div class="radio-group">
-                        <label class="radio-label"><input type="radio" name="entry.998853333" value="初めてです。" required
-                                onchange="toggleFormSections(this.value)">
-                            <span>初めてです。</span></label>
-                        <label class="radio-label"><input type="radio" name="entry.998853333" value="過去に利用したことがあります。"
-                                onchange="toggleFormSections(this.value)">
-                            <span>過去に利用したことがあります。</span></label>
-                    </div>
-                </div>
+                <!-- NFC経由は初来局が前提のため「初めてですか？」の質問は不要 -->
+                <input type="hidden" name="entry.998853333" value="初めてです。">
             </div>
 
             <div id="extended-questions">
@@ -383,10 +377,6 @@
                 </div>
             </div> <!-- End extended-questions -->
 
-            <div id="returning-patient-message"
-                style="display:none; text-align:center; padding: 20px; color: #4a5568; background-color: #f7fafc; border-radius: 8px; margin-bottom: 20px; border: 1px solid #e2e8f0;">
-                過去にご利用がある方は、以下の問診は不要です。<br>このまま一番下にある緑色の<strong>「送信する」</strong>ボタンを押して終了してください。
-            </div>
 
             <div class="submit-action">
                 <button type="submit" id="submitBtn" class="btn-submit">
@@ -410,27 +400,8 @@
 
     <!-- Custom Scripts -->
     <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
-    <script src="script.js?v=2026031801"></script>
+    <script src="script.js?v=2026032301"></script>
     <script>
-        // Toggle sections based on first-time visit
-        function toggleFormSections(val) {
-            const extended = document.getElementById('extended-questions');
-            const retMsg = document.getElementById('returning-patient-message');
-            if (val === '過去に利用したことがあります。') {
-                extended.style.display = 'none';
-                retMsg.style.display = 'block';
-                Array.from(extended.querySelectorAll('[required]')).forEach(el => {
-                    el.removeAttribute('required');
-                    el.setAttribute('data-was-required', 'true');
-                });
-            } else {
-                extended.style.display = 'block';
-                retMsg.style.display = 'none';
-                Array.from(extended.querySelectorAll('[data-was-required="true"]')).forEach(el => {
-                    el.setAttribute('required', 'required');
-                });
-            }
-        }
 
         // Toggle "Other" text inputs
         function toggleOtherInput(checkboxId, inputId) {
@@ -455,18 +426,18 @@
             let lastHiragana = '';   // 現在のIMEセッションの最後のヒラガナ読み
 
             function toKatakana(str) {
-                return (str || '').replace(/[\u3041-\u3096]/g, function(ch) {
+                return (str || '').replace(/[\u3041-\u3096]/g, function (ch) {
                     return String.fromCharCode(ch.charCodeAt(0) + 0x60);
                 });
             }
 
             // IME変換開始
-            nameInput.addEventListener('compositionstart', function() {
+            nameInput.addEventListener('compositionstart', function () {
                 lastHiragana = '';
             });
 
             // IME変換中
-            nameInput.addEventListener('compositionupdate', function(e) {
+            nameInput.addEventListener('compositionupdate', function (e) {
                 const data = e.data || '';
                 // ヒラガナを含む場合のみフリガナを更新（漢字変換後は無視）
                 if (/[\u3041-\u3096]/.test(data)) {
@@ -476,7 +447,7 @@
             });
 
             // IME変換確定（漢字になっても最後のヒラガナ読みでフリガナを確定）
-            nameInput.addEventListener('compositionend', function() {
+            nameInput.addEventListener('compositionend', function () {
                 if (lastHiragana) {
                     accKana += lastHiragana;
                 }
@@ -485,7 +456,7 @@
             });
 
             // お名前を全消去したらフリガナもリセット
-            nameInput.addEventListener('input', function(e) {
+            nameInput.addEventListener('input', function (e) {
                 if (!e.isComposing && nameInput.value === '') {
                     accKana = '';
                     lastHiragana = '';

@@ -87,19 +87,19 @@ document.addEventListener('DOMContentLoaded', () => {
 
         let womenStatus = formData.getAll('women_status').join(', ') || 'いいえ';
 
-        // 共通データ
-        const isFirst = formData.get('entry.998853333') || '';
+        // 共通データ（NFC経由は常に「初めてです。」固定）
+        const isFirst = '初めてです。';
 
-        // 詳細データ（初期値取得）
-        let generic = formData.get('entry.893585706') || '';
-        let constitution = taishitsuResult;
-        let hasAllergy = formData.getAll('entry.413348291').length > 0 ? "はい" : "いいえ";
-        let allergy = (formData.getAll('entry.413348291').map(v => v === 'その他' ? 'その他(' + (document.getElementById('allergy_other_text').value || '') + ')' : v)).join(', ') || '-';
-        let sideEffects = formData.get('entry.918293202') || 'いいえ';
-        let sideEffectsDetail = formData.get('entry.1883828617') || '-';
-        let otherHospitals = formData.get('entry.1565002541') || 'いいえ';
-        let supplements = formData.get('entry.1965254761') || 'いいえ';
-        let supplementNames = formData.get('entry.1747385177') || '-';
+        // 詳細データ
+        const generic = formData.get('entry.893585706') || '';
+        const constitution = taishitsuResult;
+        const hasAllergy = formData.getAll('entry.413348291').length > 0 ? "はい" : "いいえ";
+        const allergy = (formData.getAll('entry.413348291').map(v => v === 'その他' ? 'その他(' + (document.getElementById('allergy_other_text').value || '') + ')' : v)).join(', ') || '-';
+        const sideEffects = formData.get('entry.918293202') || 'いいえ';
+        const sideEffectsDetail = formData.get('entry.1883828617') || '-';
+        const otherHospitals = formData.get('entry.1565002541') || 'いいえ';
+        const supplements = formData.get('entry.1965254761') || 'いいえ';
+        const supplementNames = formData.get('entry.1747385177') || '-';
 
         let diseasesList = formData.getAll('entry.730294101');
         let diseasesOther = formData.get('entry.730294101.other_option_response') || '';
@@ -108,26 +108,9 @@ document.addEventListener('DOMContentLoaded', () => {
             diseases += (diseases === '-' || diseases === '') ? diseasesOther : ', ' + diseasesOther;
         }
 
-        let food = formData.getAll('entry.1740273603').join(', ') || '-';
-        let pregnancy = womenStatus;
-        let weight = formData.get('entry.2101115460') || '-';
-
-        // もし「過去に利用したことがある」場合は詳細データを空白にする
-        if (isFirst === '過去に利用したことがあります。') {
-            generic = '-';
-            constitution = '-';
-            hasAllergy = '-';
-            allergy = '-';
-            sideEffects = '-';
-            sideEffectsDetail = '-';
-            otherHospitals = '-';
-            supplements = '-';
-            supplementNames = '-';
-            diseases = '-';
-            food = '-';
-            pregnancy = '-';
-            weight = '-';
-        }
+        const food = formData.getAll('entry.1740273603').join(', ') || '-';
+        const pregnancy = womenStatus;
+        const weight = formData.get('entry.2101115460') || '-';
 
         // 保険証情報と相違なし時は、性別・住所・生年月日を「保険証情報と相違なし」とする
         const sexValue = isMynumber ? '保険証情報と相違なし' : (formData.get('entry.1417926586') || '');
