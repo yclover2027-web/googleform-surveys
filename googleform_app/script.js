@@ -332,7 +332,9 @@ function initializeLiff() {
                 // メインの追加ボタン（その場で追加を試みる）
                 '<button id="addFriendBtn" style="display: block; width: 100%; background: #06C755; color: #fff; padding: 16px; border-radius: 12px; border:none; text-decoration: none; font-weight: bold; font-size: 1.1rem; cursor:pointer; margin-bottom: 15px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">LINEで友だち追加する</button>' +
                 // 予備のチェックボタン
-                '<button id="checkFriendBtn" style="display: block; width: 100%; background: #fff; color: #06C755; padding: 12px; border-radius: 12px; border: 2px solid #06C755; text-decoration: none; font-weight: bold; font-size: 1rem; cursor:pointer;">追加したのでアンケートに進む</button>' +
+                '<button id="checkFriendBtn" style="display: block; width: 100%; background: #fff; color: #06C755; padding: 12px; border-radius: 12px; border: 2px solid #06C755; text-decoration: none; font-weight: bold; font-size: 1rem; cursor:pointer; margin-bottom: 15px;">追加したのでアンケートに進む</button>' +
+                // スキップボタン
+                '<button id="skipBtn" style="display: block; width: 100%; background: transparent; color: #718096; padding: 10px; border-radius: 12px; border: 1px solid #cbd5e0; text-decoration: none; font-size: 0.9rem; cursor:pointer;">友だち登録せずに回答する</button>' +
                 '<p style="margin-top: 20px; font-size: 0.85rem; color: #718096; line-height:1.5;">※「友だち追加する」を押して登録した後、この画面に戻ってきてください。</p>' +
                 '</div>';
 
@@ -362,6 +364,12 @@ function initializeLiff() {
             const checkFriendBtn = document.getElementById('checkFriendBtn');
             if (checkFriendBtn) {
                 checkFriendBtn.addEventListener('click', checkAndShow);
+            }
+
+            // スキップボタンの処理
+            const skipBtn = document.getElementById('skipBtn');
+            if (skipBtn) {
+                skipBtn.addEventListener('click', showForm);
             }
         }
     }
